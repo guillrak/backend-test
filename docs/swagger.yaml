@@ -1,0 +1,271 @@
+definitions:
+  entity.CreatePet:
+    properties:
+      average_female_adult_weight:
+        type: integer
+      average_male_adult_weight:
+        type: integer
+      name:
+        type: string
+      pet_size:
+        type: string
+      species:
+        type: string
+    type: object
+  entity.Pet:
+    properties:
+      average_female_adult_weight:
+        type: integer
+      average_male_adult_weight:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      pet_size:
+        type: string
+      species:
+        type: string
+    type: object
+  entity.SearchPets:
+    properties:
+      max_weight:
+        type: integer
+      min_weight:
+        type: integer
+      species:
+        type: string
+    type: object
+  entity.UpdatePet:
+    properties:
+      average_female_adult_weight:
+        type: integer
+      average_male_adult_weight:
+        type: integer
+      name:
+        type: string
+      pet_size:
+        type: string
+      species:
+        type: string
+    type: object
+  http.ErrorResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  http.SuccessResponse:
+    properties:
+      data: {}
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/pets:
+    get:
+      consumes:
+      - application/json
+      description: Get all pets from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entity.Pet'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Get all pets
+      tags:
+      - Pet
+    post:
+      consumes:
+      - application/json
+      description: Adds a new pet to the database
+      parameters:
+      - description: Pet object
+        in: body
+        name: CreatePet
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CreatePet'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entity.Pet'
+              type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Create a new pet
+      tags:
+      - Pet
+  /v1/pets/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a pet by its ID
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.SuccessResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Delete a pet
+      tags:
+      - Pet
+    get:
+      consumes:
+      - application/json
+      description: Get a pet by its ID
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entity.Pet'
+              type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Get a pet
+      tags:
+      - Pet
+    put:
+      consumes:
+      - application/json
+      description: Updates the details of an existing pet
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Pet object
+        in: body
+        name: UpdatePet
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdatePet'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entity.Pet'
+              type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Update an existing pet
+      tags:
+      - Pet
+  /v1/pets/search:
+    post:
+      consumes:
+      - application/json
+      description: Search for pets by species and weight
+      parameters:
+      - description: Search options
+        in: body
+        name: SearchPets
+        required: true
+        schema:
+          $ref: '#/definitions/entity.SearchPets'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/http.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entity.Pet'
+                  type: array
+              type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Search pets
+      tags:
+      - Pet
+swagger: "2.0"

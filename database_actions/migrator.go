@@ -16,12 +16,8 @@ import (
 var driver database.Driver
 
 // InitMigrator initiates values essential for migrations
-func InitMigrator(dsnMigrate string) error {
+func InitMigrator(db *sql.DB) error {
 	var err error
-	db, err := sql.Open("mysql", dsnMigrate)
-	if err != nil {
-		return fmt.Errorf("error while opening db connection: %w", err)
-	}
 	driver, err = mysql.WithInstance(db, &mysql.Config{})
 	if err != nil {
 		return fmt.Errorf("error while instanciating migration driver: %w", err)

@@ -15,7 +15,7 @@ services:
     volumes:
       - .:/app
   mysql-test:
-    platform: linux/arm64
+    platform: linux/amd64
     build: ./.docker-compose/mysql
     container_name: mysql-test
     env_file:
@@ -33,7 +33,7 @@ services:
     ports:
       - 53306:3306
   pma-test:
-    image: arm64v8/phpmyadmin:latest
+    image: amd64/phpmyadmin:latest
     container_name: pma-test
     ports:
       - 63306:80

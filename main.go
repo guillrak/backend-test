@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,12 +10,16 @@ import (
 	charmLog "github.com/charmbracelet/log"
 	"github.com/gorilla/mux"
 	"github.com/japhy-tech/backend-test/database_actions"
-	"github.com/japhy-tech/backend-test/internal"
+	"github.com/japhy-tech/backend-test/internal/database"
+	"github.com/japhy-tech/backend-test/internal/server"
+
+	_ "github.com/japhy-tech/backend-test/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 const (
-	MysqlDSN = "root:root@(mysql-test:3306)/core?parseTime=true"
-	ApiPort  = "5000"
+	ApiPort        = "5000"
+	BreedsFilePath = "database_actions/seeds/breeds.csv"
 )
 
 func main() {
@@ -29,35 +32,45 @@ func main() {
 		Level:           charmLog.DebugLevel,
 	})
 
-	err := database_actions.InitMigrator(MysqlDSN)
+	err := validateEnv()
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
 
-	msg, err := database_actions.RunMigrate("up", 0)
-	if err != nil {
-		logger.Error(err.Error())
-	} else {
-		logger.Info(msg)
-	}
+	db := database.NewMysqlDB(logger)
 
-	db, err := sql.Open("mysql", MysqlDSN)
-	if err != nil {
-		logger.Fatal(err.Error())
-		os.Exit(1)
-	}
 	defer db.Close()
 	db.SetMaxIdleConns(0)
 
 	err = db.Ping()
 	if err != nil {
 		logger.Fatal(err.Error())
-		os.Exit(1)
 	}
 
 	logger.Info("Database connected")
 
-	app := internal.NewApp(logger)
+	err = database_actions.InitMigrator(db)
+	if err != nil {
+		logger.Fatal(err.Error())
+	}
+
+	msg, err := database_actions.RunMigrate("up", 0)
+	if err != nil {
+		logger.Fatal(err.Error())
+	} else {
+		logger.Info(msg)
+	}
+
+	// Loading data into the pets table
+	nbRowsAffected, err := database_actions.LoadPetsTable(db, BreedsFilePath)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("Unable to load pets table %s", err.Error()))
+	}
+	if nbRowsAffected > 0 {
+		logger.Info(fmt.Sprintf("%d lines were successfully loaded into the pets table", nbRowsAffected))
+	}
+
+	app := server.NewApp(logger, db)
 
 	r := mux.NewRouter()
 	app.RegisterRoutes(r.PathPrefix("/v1").Subrouter())
@@ -65,12 +78,25 @@ func main() {
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}).Methods(http.MethodGet)
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	err = http.ListenAndServe(
 		net.JoinHostPort("", ApiPort),
 		r,
 	)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("Unable to start service %s", err.Error()))
+	}
 
 	// =============================== Starting Msg ===============================
 	logger.Info(fmt.Sprintf("Service started and listen on port %s", ApiPort))
+}
+
+// validateEnv checks that all the environment variables required to run the app are set.
+func validateEnv() error {
+	if os.Getenv("MYSQL_ROOT_PASSWORD") == "" {
+		return fmt.Errorf("MYSQL_ROOT_PASSWORD is not set")
+	}
+
+	return nil
 }
