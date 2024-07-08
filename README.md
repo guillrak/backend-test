@@ -72,9 +72,10 @@ I've included all these changes in the original `docker-compose.yml` and I hope 
 
 I have not made a Go binary, the installation has not changed:
 
-1. Build the application `docker compose build`
-2. Run docker compose to start the application `docker compose up -d`
-3. Once the application is up and running, the routes can be tested using Swagger at http://localhost:50010/swagger/index.html or the classic tools.
+1. Copy the `.env.example` file to `.env`
+2. Build the application `docker compose build`
+3. Run docker compose to start the application `docker compose up`
+4. Once the application is up and running, the routes can be tested using Swagger at http://localhost:50010/swagger/index.html or the classic tools.
 
 I have published the Postman documentation at this link: https://documenter.getpostman.com/view/36773640/2sA3e1BqHf
 
